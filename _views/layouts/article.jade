@@ -1,0 +1,6 @@
+extends ./layout.jade
+
+block content
+  h1= title
+  div.timestamp= moment(date).format("DD MMMM YYYY")
+  article!= contents
