@@ -1,23 +1,38 @@
 var Metalsmith    = require('metalsmith'),
     archive       = require('metalsmith-archive'),
     autoprefixer  = require('metalsmith-autoprefixer'),
+    // browserSync   = require('metalsmith-browser-sync'),
     collections   = require('metalsmith-collections'),
-    define        = require('metalsmith-define')
+    define        = require('metalsmith-define'),
     drafts        = require('metalsmith-drafts'),
-    inPlace       = require('metalsmith-in-place'),
+    // excerpts      = require('metalsmith-excerpts'),
+    // inPlace       = require('metalsmith-in-place'),
+    ignore        = require('metalsmith-ignore'),
     jade          = require('metalsmith-jade'),
     layouts       = require('metalsmith-layouts'),
     markdown      = require('metalsmith-markdown'),
     pagination    = require('metalsmith-pagination'),
     permalinks    = require('metalsmith-permalinks'),
     snippet       = require('metalsmith-snippet'),
-    lodash        = require('lodash'),
     highlighter   = require('highlighter');
 
+var debug = function(files, metalsmith, done) {
+              Object.keys(files).forEach(function (file) {
+                var fileObject = files[file];
+                console.log("key -------> ", file);
+                console.log("value -----> ", fileObject);
+              });
+            };
 
 Metalsmith(__dirname)
-  .source('_src')
-  .use(drafts())
+  .source('_app/source')
+  .destination('./')
+  .clean(false)
+  .use(ignore([
+    '**/*/.gitkeep',
+    '**/*/.DS_Store'
+  ]))
+  .use(debug)
   .use(define({
     blog: {
       uri: 'http://iam.pe',
@@ -28,41 +43,66 @@ Metalsmith(__dirname)
       uri: 'http://iam.pe',
       name: 'Paulo Elias'
     },
-    moment: require('moment')
+    moment: require("moment"),
+    _:      require('lodash')
   }))
+  .use(drafts())
   .use(collections({
+    Home: {
+      pattern: ''
+    },
     articles: {
       perPage: 7,
       pattern: 'articles/**/*.md',
       sortBy: 'date',
       reverse: true,
       pageMetadata: {
-        'title': 'Archive'
+        'title': 'Article Archive'
+      }
+    },
+    news: {
+      perPage: 7,
+      pattern: 'posts/**/*.md',
+      sortBy: 'date',
+      reverse: true,
+      pageMetadata: {
+        'title': 'Posts Archive'
       }
     }
   }))
-  .use(snippet())
-  .use(permalinks({
-    pattern: ':collection/:year/:month/:day/:title'
-  }))
   .use(markdown({
     smartypants: true,
+    smartLists: true,
     gfm: true,
     tables: true,
     highlight: highlighter()
   }))
+  .use(snippet({
+    maxLength: 300,
+    suffix: '&hellip;'
+  }))
+  .use(permalinks({
+    pattern: ':collection/:date/:title',
+  }))
+  // .use(inPlace({
+  //   engine: 'jade',
+  //   partials: '_app/partials',
+  //   pattern: '*.jade'
+  // }))
   .use(layouts({
     engine: 'jade',
-    directory: '_views/layouts',
-    partials: '_views/partials',
-    pattern: '*.jade'
+    default: 'base.jade',
+    directory: './_app/layouts',
+    partials: './_app/partials',
   }))
-  .use(inPlace({
-    engine: 'jade',
-    partials: '_views/partials',
-    pattern: '*.jade'
-  }))
-  .destination('_dist')
+  // .use(browserSync({
+  //   server : "./",
+  //   files  : ["_app/source/**/*.md", "_app/**/*.jade"]
+  // }))
   .build(function(err) {
-    if (err) console.log(err);
+    if (err) {
+      console.log(err)
+    } else {
+      console.log('Site build complete!');
+    };
   });
