@@ -32,7 +32,7 @@ Metalsmith(__dirname)
     '**/*/.gitkeep',
     '**/*/.DS_Store'
   ]))
-  .use(debug)
+  // .use(debug)
   .use(define({
     blog: {
       uri: 'http://iam.pe',
@@ -91,7 +91,6 @@ Metalsmith(__dirname)
   // }))
   .use(layouts({
     engine: 'jade',
-    default: 'base.jade',
     directory: './_app/layouts',
     partials: './_app/partials',
   }))
